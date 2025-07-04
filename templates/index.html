@@ -1,0 +1,38 @@
+<div id="preview">
+    {% if file %}
+        {% with file_ext=file.file.url|lower|slice:"-3:" %}
+            {% if file_ext in "jpg,png,gif,bmp" or file.file.url|lower|slice:"-4:" in "jpeg,webp" %}
+                <img src="{{ file.file.url }}" style="width: 100%; max-width: 1000px;">
+            {% elif file_ext in "mp4,mov,avi,webm" %}
+                <video
+                    src="{{ file.file.url }}"
+                    style="width: 100%; max-width: 1000px; height: auto;"
+                    loop
+                    muted
+                    autoplay
+                    playsinline
+                >
+                Your browser does not support the video format.
+                </video>
+            {% endif %}
+        {% endwith %}
+    {% else %}
+    <p>No file uploaded</p>
+    {% endif %}
+</div>
+
+<script>
+    const socket = new WebSocket('ws://' + window.location.host + '/ws/screen/');
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const previewDiv = document.getElementById('preview');
+        const ext = data.file_url.split('.').pop().toLowerCase();
+
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+            previewDiv.innerHTML = `<img src="${data.file_url}" style="width:100%; height:100% max-width:1000px;">`;
+        } else if (['mp4', 'webm'].includes(ext)) {
+            previewDiv.innerHTML = `<video src="${data.file_url}" loop muted autoplay playsinline style="width:100%; height:100% max-width:1000px;"></video>`;
+        }
+    }
+</script>
