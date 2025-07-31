@@ -1,5 +1,90 @@
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form }}
-    <button type="submit">Upload</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Screen</title>
+    {% load static %}
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: sans-serif;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-image:
+                linear-gradient(to bottom right, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+                url("{% static 'img.jpg' %}");
+            background-position: center;
+        }
+
+        .dropup {
+            position: absolute;
+            bottom: 420px;
+            left: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 1000;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            gap: 10px;
+        }
+
+        .birthday-btn, .daily-btn, .bls-btn {
+            background-color: grey;
+            color: white;
+            padding: 20px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 28px;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="dropupForm" class="dropup">
+            <form method="POST" enctype="multipart/form-data" action="{% url 'trigger_action' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="birthday">
+                <input type="text" name="name" placeholder="Enter name" required><br><br>
+                <input type="file" name="photo" accept="image/*" required><br><br>
+                <button type="submit" class="primary primary-btn">Submit</button>
+            </form>
+        </div>
+
+        <!-- Birthday Button to Toggle Form -->
+        <button id="birthdayBtn" class="birthday-btn">Birthday</button>
+
+        <!-- Daily Video -->
+        <form method="POST" action="{% url 'trigger_action' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="play_daily_video">
+            <button type="submit" class="daily-btn">Daily</button>
+        </form>
+
+        <!-- BLS Video -->
+        <form method="POST" action="{% url 'trigger_action' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="play_bls_video">
+            <button type="submit" class="bls-btn">BLS</button>
+        </form>
+    </div>
+
+    <!-- Toggle Form Script -->
+    <script>
+        document.getElementById("birthdayBtn").onclick = function () {
+            const form = document.getElementById("dropupForm");
+            form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
+        };
+    </script>
+</body>
+</html>

@@ -9,8 +9,9 @@ class ScreenConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard("screen", self.channel_name)
 
-    async def send_file(self, event):
-        file_url = event['file_url']
+    async def send_action(self, event):
         await self.send(text_data=json.dumps({
-            'file_url': file_url
+            "type": event["type"],
+            "action": event["action"],
+            "data": event.get("data", None),
         }))

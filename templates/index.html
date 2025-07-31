@@ -1,38 +1,100 @@
-<div id="preview">
-    {% if file %}
-        {% with file_ext=file.file.url|lower|slice:"-3:" %}
-            {% if file_ext in "jpg,png,gif,bmp" or file.file.url|lower|slice:"-4:" in "jpeg,webp" %}
-                <img src="{{ file.file.url }}" style="width: 100%; max-width: 1000px;">
-            {% elif file_ext in "mp4,mov,avi,webm" %}
-                <video
-                    src="{{ file.file.url }}"
-                    style="width: 100%; max-width: 1000px; height: auto;"
-                    loop
-                    muted
-                    autoplay
-                    playsinline
-                >
-                Your browser does not support the video format.
-                </video>
-            {% endif %}
-        {% endwith %}
-    {% else %}
-    <p>No file uploaded</p>
-    {% endif %}
-</div>
-
-<script>
-    const socket = new WebSocket('ws://' + window.location.host + '/ws/screen/');
-
-    socket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        const previewDiv = document.getElementById('preview');
-        const ext = data.file_url.split('.').pop().toLowerCase();
-
-        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-            previewDiv.innerHTML = `<img src="${data.file_url}" style="width:100%; height:100% max-width:1000px;">`;
-        } else if (['mp4', 'webm'].includes(ext)) {
-            previewDiv.innerHTML = `<video src="${data.file_url}" loop muted autoplay playsinline style="width:100%; height:100% max-width:1000px;"></video>`;
-        }
+{% load static %}
+<style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
-</script>
+
+    .card {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+      text-align: center;
+      max-width: 650px;
+    }
+
+    .card h1 {
+      color: #ff4081;
+      margin-bottom: 20px;
+    }
+
+    .card img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .signature {
+      font-style: italic;
+      color: #666;
+    }
+  </style>
+<body>
+  <div id="birthday-card" style="display: none;">
+    <div class="card">
+      <img id="birthday-photo" src="" alt="Employee Photo">
+      <h1 id="birthday-name">Happy Birthday, </h1>
+      <div class="message">
+        Wishing you a day filled with happiness and a year filled with joy. Thank you for being such a valuable part of our team!
+      </div>
+      <div class="signature">
+        — Your Hero DMC Heart Institute Family
+      </div>
+    </div>
+  </div>
+
+  <!-- 📽️ Video Section -->
+  <video id="video-player"
+         controls
+         autoplay
+         muted
+         loop
+         playsinline
+         style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1;">
+  </video>
+
+    <script>
+    const socket = new WebSocket("ws://" + window.location.host + "/ws/screen/");
+
+    socket.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      const videoPlayer = document.getElementById("video-player");
+      const birthdayCard = document.getElementById("birthday-card");
+      const nameTag = document.getElementById("birthday-name");
+      const photoTag = document.getElementById("birthday-photo");
+
+      if (data.type === "send_action") {
+        if (data.action === "birthday") {
+          const name = data.data.name || "Unknown";
+          const photo = data.data.photo || "";
+
+          nameTag.innerText = `Happy Birthday, ${name}`;
+          photoTag.src = photo;
+
+          videoPlayer.style.display = "none";
+          birthdayCard.style.display = "flex";
+        } else if (data.action.startsWith("play_")) {
+          birthdayCard.style.display = "none";
+          videoPlayer.style.display = "block";
+          videoPlayer.src = data.data.url;
+          videoPlayer.load();
+          videoPlayer.play();
+        }
+      }
+    };
+  </script>
+</body>
