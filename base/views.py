@@ -2,6 +2,10 @@ import base64
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.shortcuts import render
+from datetime import date
+from .models import Birthday
+import time
+import itertools
 
 def trigger_action(request):
     if request.method == "POST":
@@ -10,27 +14,27 @@ def trigger_action(request):
         channel_layer = get_channel_layer()
 
         if action_type == "birthday":
-            name = request.POST.get("name")
-            photo = request.FILES.get("photo")
-
-            # Convert image to base64
-            image_data = photo.read()
-            image_base64 = base64.b64encode(image_data).decode('utf-8')
-            mime_type = photo.content_type
-            image_url = f"data:{mime_type};base64,{image_base64}"
+            curr_date = date.today()
+            bday = Birthday.objects.filter(dob__month = curr_date.month, dob__day = curr_date.day)
+            data = [
+                {
+                    "name": person.emp_name,
+                    "photo": person.img.url if person.img else ""
+                }
+                for person in bday
+            ]
 
             async_to_sync(channel_layer.group_send)(
                 "screen",
                 {
                     "type": "send_action",
-                    "action": action_type,
-                    "data": {
-                        "name": name,
-                        "photo": image_url
-                    }
+                    "action": "birthday",
+                    "data": data
                 }
             )
-            return render(request, "set.html")  # No need to pass context here
+
+            return render(request, "set.html")
+
 
         elif action_type == "play_daily_video":
             data = {"url": "/static/daily.mp4"}

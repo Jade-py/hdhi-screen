@@ -51,18 +51,12 @@
 </head>
 <body>
     <div class="container">
-        <div id="dropupForm" class="dropup">
-            <form method="POST" enctype="multipart/form-data" action="{% url 'trigger_action' %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="birthday">
-                <input type="text" name="name" placeholder="Enter name" required><br><br>
-                <input type="file" name="photo" accept="image/*" required><br><br>
-                <button type="submit" class="primary primary-btn">Submit</button>
-            </form>
-        </div>
+        <form method="POST" enctype="multipart/form-data" action="{% url 'trigger_action' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="birthday">
+            <button type="submit" class="birthday-btn">Birthday</button>
+        </form>
 
-        <!-- Birthday Button to Toggle Form -->
-        <button id="birthdayBtn" class="birthday-btn">Birthday</button>
 
         <!-- Daily Video -->
         <form method="POST" action="{% url 'trigger_action' %}">
@@ -80,11 +74,5 @@
     </div>
 
     <!-- Toggle Form Script -->
-    <script>
-        document.getElementById("birthdayBtn").onclick = function () {
-            const form = document.getElementById("dropupForm");
-            form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
-        };
-    </script>
 </body>
 </html>

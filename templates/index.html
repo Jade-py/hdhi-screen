@@ -1,5 +1,10 @@
 {% load static %}
-<style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Birthday Wishes</title>
+  <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(to right, #fbc2eb, #a6c1ee);
@@ -8,6 +13,10 @@
       align-items: center;
       height: 100vh;
       margin: 0;
+    }
+
+    .hidden {
+      display: none;
     }
 
     .card {
@@ -42,9 +51,20 @@
       font-style: italic;
       color: #666;
     }
+
+    .fullscreen-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -1;
+    }
   </style>
+</head>
 <body>
-  <div id="birthday-card" style="display: none;">
+  <div id="birthday-card" class="hidden">
     <div class="card">
       <img id="birthday-photo" src="" alt="Employee Photo">
       <h1 id="birthday-name">Happy Birthday, </h1>
@@ -57,44 +77,52 @@
     </div>
   </div>
 
-  <!-- 📽️ Video Section -->
-  <video id="video-player"
-         controls
-         autoplay
-         muted
-         loop
-         playsinline
-         style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1;">
-  </video>
+  <video id="video-player" class="fullscreen-video" controls autoplay muted loop playsinline></video>
 
-    <script>
+  <script>
     const socket = new WebSocket("ws://" + window.location.host + "/ws/screen/");
 
+    const els = {
+      video: document.getElementById("video-player"),
+      card: document.getElementById("birthday-card"),
+      name: document.getElementById("birthday-name"),
+      photo: document.getElementById("birthday-photo")
+    };
+
     socket.onmessage = function(event) {
-      const data = JSON.parse(event.data);
-      const videoPlayer = document.getElementById("video-player");
-      const birthdayCard = document.getElementById("birthday-card");
-      const nameTag = document.getElementById("birthday-name");
-      const photoTag = document.getElementById("birthday-photo");
+      const message = JSON.parse(event.data);
 
-      if (data.type === "send_action") {
-        if (data.action === "birthday") {
-          const name = data.data.name || "Unknown";
-          const photo = data.data.photo || "";
+      if (message.action === "birthday") {
+        const people = message.data;
+        let index = 0;
 
-          nameTag.innerText = `Happy Birthday, ${name}`;
-          photoTag.src = photo;
+        function showNext() {
+          if (index >= people.length) {
+            index = 0;
+          }
 
-          videoPlayer.style.display = "none";
-          birthdayCard.style.display = "flex";
-        } else if (data.action.startsWith("play_")) {
-          birthdayCard.style.display = "none";
-          videoPlayer.style.display = "block";
-          videoPlayer.src = data.data.url;
-          videoPlayer.load();
-          videoPlayer.play();
+          const person = people[index];
+          els.name.textContent = `Happy Birthday, ${person.name}`;
+          els.photo.src = person.photo;
+
+          els.video.classList.add("hidden");
+          els.card.classList.remove("hidden");
+
+          index++;
+          setTimeout(showNext, 2000); // 5 seconds per person
         }
+
+        showNext();
+      }
+
+      else if (message.action && message.action.startsWith("play_")) {
+        els.card.classList.add("hidden");
+        els.video.classList.remove("hidden");
+        els.video.src = message.data.url;
+        els.video.load();
+        els.video.play();
       }
     };
   </script>
 </body>
+</html>
